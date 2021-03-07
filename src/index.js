@@ -1,51 +1,63 @@
 const express = require('express');
+const { uuid } = require('uuidv4');
 
 const app = express()
 
 app.use(express.json())
 
+const projects = [];
+
 app.get('/projects', (request, response)=>{
+     const { title } = request.query;
+     const results = title
+     ? projects.filter(project => project.title.includes(title))
+     :projects
 
-    const { title, owner} = request.query;
 
-    console.log(title);
-    console.log(owner)
-
-    return response.json([
-        'Project One',
-        'Project Two',
-    ]);
+    return response.json(results);
 });
 
 app.post('/projects', (request, response)=>{
+    const { title, owner} = request.body;
+    const project = { id: uuid(), title, owner };
 
-    const body = request.body;
-
-    console.log(body)
+    projects.push(project);
     
-    return response.json([
-        'Project One',
-        'Project Two',
-        'Project Three',
-    ])
+    return response.json(project);
 })
 
 app.put('/projects/:id', (request, response)=>{
+    const { id } = request.params;
+    const { title, owner } = request.body;
+    const projectIndex = projects.findIndex(project => project.id == id);
 
-    const params = request.params;
+    if(projectIndex < 0 ){
 
-    console.log(params)
-    return response.json([
-        'Project Four',
-        'Project Two',
-        'Project Three',
-    ])
+        return response.status(400).json({ error: 'Project not found'})
+    }
+
+    const project = {
+        id,
+        title,
+        owner,
+    }
+
+    projects[projectIndex] = project;
+
+    return response.json(project);
 })
 app.delete('/projects/:id', (request, response)=>{
-    return response.json([
-        'Project Two',
-        'Project Three',
-    ])
+    const { id } = request.params;
+    const projectIndex = projects.findIndex(project => project.id == id);
+
+    if( projectIndex < 0 ){
+
+        return response.status(400).json({ error: 'Project not found! '});
+    }
+
+    projects.splice[ projectIndex ];
+
+    return response.status(204).send()
 })
 
 app.listen(3333, ()=>{
